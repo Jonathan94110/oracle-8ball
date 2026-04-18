@@ -2,7 +2,6 @@
   position: fixed;
   inset: 0;
   background: #050308;
-  cursor: pointer;
   overflow: hidden;
 }
 
@@ -10,32 +9,299 @@
   display: block;
   width: 100%;
   height: 100%;
+  cursor: pointer;
 }
 
+/* ---- Tab bar ---- */
+.tab-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 3, 12, 0.92),
+    rgba(5, 3, 12, 0)
+  );
+  pointer-events: none;
+}
+
+.tab-bar > * {
+  pointer-events: auto;
+}
+
+.tab-brand {
+  font-family: "Cinzel", "Georgia", serif;
+  letter-spacing: 0.35em;
+  font-size: 0.78rem;
+  color: #c9b6ff;
+  text-shadow: 0 0 10px rgba(122, 77, 240, 0.55);
+  opacity: 0.85;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 77, 240, 0.4) transparent;
+  padding-bottom: 2px;
+}
+
+.tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.tabs::-webkit-scrollbar-thumb {
+  background: rgba(122, 77, 240, 0.4);
+  border-radius: 2px;
+}
+
+.tab-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid rgba(122, 77, 240, 0.35);
+  border-radius: 999px;
+  background: rgba(20, 10, 40, 0.55);
+  backdrop-filter: blur(6px);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.tab-wrap.active {
+  border-color: rgba(180, 140, 255, 0.9);
+  background: rgba(60, 30, 120, 0.55);
+  box-shadow: 0 0 18px rgba(122, 77, 240, 0.45);
+}
+
+.tab-main {
+  background: none;
+  border: none;
+  color: #d9c7ff;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.tab-wrap.active .tab-main {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(201, 182, 255, 0.7);
+}
+
+.tab-edit {
+  background: none;
+  border: none;
+  border-left: 1px solid rgba(122, 77, 240, 0.25);
+  color: #a590d6;
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.tab-edit:hover {
+  color: #ffffff;
+  background: rgba(122, 77, 240, 0.15);
+}
+
+.tab-add {
+  background: rgba(20, 10, 40, 0.55);
+  border: 1px dashed rgba(122, 77, 240, 0.5);
+  color: #c9b6ff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.tab-add:hover {
+  background: rgba(60, 30, 120, 0.65);
+  border-color: rgba(180, 140, 255, 0.8);
+  color: #ffffff;
+}
+
+/* ---- Bottom overlay ---- */
 .ui-overlay {
   position: absolute;
-  bottom: 32px;
+  bottom: 28px;
   left: 0;
   right: 0;
   text-align: center;
   color: #c9b6ff;
   font-family: "Cinzel", "Georgia", serif;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   pointer-events: none;
-  text-shadow: 0 0 12px rgba(122, 77, 240, 0.55);
+  text-shadow: 0 0 10px rgba(122, 77, 240, 0.5);
 }
 
-.ui-overlay h1 {
+.ui-overlay .category-hint {
   margin: 0 0 6px;
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: #d9c7ff;
+  font-size: 0.95rem;
+  color: #e5d7ff;
+  letter-spacing: 0.22em;
 }
 
-.ui-overlay p {
+.ui-overlay .click-hint {
   margin: 0;
-  font-size: 0.8rem;
-  opacity: 0.75;
-  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  opacity: 0.7;
+  letter-spacing: 0.22em;
+}
+
+/* ---- Editor modal ---- */
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 2, 10, 0.78);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+  animation: fade-in 0.15s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.editor {
+  background: linear-gradient(180deg, #140a25 0%, #0a0515 100%);
+  border: 1px solid rgba(122, 77, 240, 0.45);
+  border-radius: 10px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(122, 77, 240, 0.25);
+  color: #d9c7ff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.editor h2 {
+  margin: 0 0 18px;
+  font-family: "Cinzel", "Georgia", serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e5d7ff;
+  text-shadow: 0 0 10px rgba(122, 77, 240, 0.5);
+}
+
+.editor-field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.editor-field span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a590d6;
+  margin-bottom: 6px;
+}
+
+.editor-field input,
+.editor-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(10, 5, 20, 0.7);
+  border: 1px solid rgba(122, 77, 240, 0.35);
+  border-radius: 6px;
+  color: #efe4ff;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.editor-field input:focus,
+.editor-field textarea:focus {
+  outline: none;
+  border-color: rgba(180, 140, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(122, 77, 240, 0.2);
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.editor-actions .spacer {
+  flex: 1;
+}
+
+.editor-actions button {
+  background: rgba(20, 10, 40, 0.8);
+  border: 1px solid rgba(122, 77, 240, 0.4);
+  color: #d9c7ff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.editor-actions button:hover:not(:disabled) {
+  background: rgba(60, 30, 120, 0.7);
+  border-color: rgba(180, 140, 255, 0.8);
+}
+
+.editor-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-actions .btn-primary {
+  background: rgba(90, 50, 180, 0.85);
+  border-color: rgba(180, 140, 255, 0.9);
+  color: #ffffff;
+}
+
+.editor-actions .btn-primary:hover:not(:disabled) {
+  background: rgba(110, 65, 210, 0.95);
+}
+
+.editor-actions .btn-danger {
+  background: rgba(90, 20, 30, 0.7);
+  border-color: rgba(220, 80, 100, 0.5);
+  color: #ffb8c0;
+}
+
+.editor-actions .btn-danger:hover:not(:disabled) {
+  background: rgba(130, 30, 45, 0.85);
+  border-color: rgba(240, 110, 130, 0.8);
+  color: #ffffff;
 }
