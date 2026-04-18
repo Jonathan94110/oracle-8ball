@@ -24,16 +24,14 @@ export function Tabs({ categories, activeId, onSelect, onAdd, onEdit }: Props) {
               >
                 {cat.name}
               </button>
-              {!cat.builtin && (
-                <button
-                  className="tab-edit"
-                  onClick={() => onEdit(cat.id)}
-                  aria-label={`Edit ${cat.name}`}
-                  title="Edit"
-                >
-                  ✎
-                </button>
-              )}
+              <button
+                className="tab-edit"
+                onClick={() => onEdit(cat.id)}
+                aria-label={`Edit ${cat.name}`}
+                title="Edit"
+              >
+                ✎
+              </button>
             </div>
           );
         })}

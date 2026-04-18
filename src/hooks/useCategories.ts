@@ -1,33 +1,36 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Category } from "../types";
-import { BUILTIN_CATEGORIES } from "../data/categories";
+import { SEED_CATEGORIES } from "../data/categories";
 
-const STORAGE_KEY = "oracle-8ball:custom-categories:v1";
+const STORAGE_KEY = "oracle-8ball:categories:v2";
 const ACTIVE_KEY = "oracle-8ball:active-category:v1";
 
-function loadCustom(): Category[] {
+function isCategory(c: unknown): c is Category {
+  return (
+    !!c &&
+    typeof (c as Category).id === "string" &&
+    typeof (c as Category).name === "string" &&
+    Array.isArray((c as Category).phrases)
+  );
+}
+
+function loadCategories(): Category[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return SEED_CATEGORIES.map((c) => ({ ...c }));
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (c): c is Category =>
-          !!c &&
-          typeof c.id === "string" &&
-          typeof c.name === "string" &&
-          Array.isArray(c.phrases)
-      )
-      .map((c) => ({ ...c, builtin: false }));
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return SEED_CATEGORIES.map((c) => ({ ...c }));
+    }
+    const valid = parsed.filter(isCategory);
+    return valid.length > 0 ? valid : SEED_CATEGORIES.map((c) => ({ ...c }));
   } catch {
-    return [];
+    return SEED_CATEGORIES.map((c) => ({ ...c }));
   }
 }
 
-function loadActiveId(): string {
-  const raw = localStorage.getItem(ACTIVE_KEY);
-  return raw ?? BUILTIN_CATEGORIES[0].id;
+function loadActiveId(fallback: string): string {
+  return localStorage.getItem(ACTIVE_KEY) ?? fallback;
 }
 
 function newId(): string {
@@ -42,20 +45,21 @@ function sanitizePhrases(phrases: string[]): string[] {
 }
 
 export function useCategories() {
-  const [custom, setCustom] = useState<Category[]>(() => loadCustom());
-  const [activeId, setActiveIdState] = useState<string>(() => loadActiveId());
+  const [categories, setCategories] = useState<Category[]>(() => loadCategories());
+  const [activeId, setActiveIdState] = useState<string>(() =>
+    loadActiveId(SEED_CATEGORIES[0].id)
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
-  }, [custom]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
+  }, [categories]);
 
   useEffect(() => {
     localStorage.setItem(ACTIVE_KEY, activeId);
   }, [activeId]);
 
-  const categories: Category[] = [...BUILTIN_CATEGORIES, ...custom];
   const active =
-    categories.find((c) => c.id === activeId) ?? BUILTIN_CATEGORIES[0];
+    categories.find((c) => c.id === activeId) ?? categories[0];
 
   const setActiveId = useCallback((id: string) => setActiveIdState(id), []);
 
@@ -63,17 +67,16 @@ export function useCategories() {
     const cat: Category = {
       id: newId(),
       name: name.trim(),
-      phrases: sanitizePhrases(phrases),
-      builtin: false
+      phrases: sanitizePhrases(phrases)
     };
-    setCustom((prev) => [...prev, cat]);
+    setCategories((prev) => [...prev, cat]);
     setActiveIdState(cat.id);
     return cat.id;
   }, []);
 
   const updateCategory = useCallback(
     (id: string, name: string, phrases: string[]) => {
-      setCustom((prev) =>
+      setCategories((prev) =>
         prev.map((c) =>
           c.id === id
             ? { ...c, name: name.trim(), phrases: sanitizePhrases(phrases) }
@@ -84,13 +87,16 @@ export function useCategories() {
     []
   );
 
-  const removeCategory = useCallback(
-    (id: string) => {
-      setCustom((prev) => prev.filter((c) => c.id !== id));
-      if (activeId === id) setActiveIdState(BUILTIN_CATEGORIES[0].id);
-    },
-    [activeId]
-  );
+  const removeCategory = useCallback((id: string) => {
+    setCategories((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((c) => c.id !== id);
+      setActiveIdState((currentActive) =>
+        currentActive === id ? next[0].id : currentActive
+      );
+      return next;
+    });
+  }, []);
 
   return {
     categories,

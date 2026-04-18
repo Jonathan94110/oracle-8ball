@@ -19,6 +19,14 @@ export function CategoryEditor({ mode, initial, onSave, onCancel, onDelete }: Pr
     .filter(Boolean);
   const canSave = name.trim().length > 0 && phrases.length > 0;
 
+  const handleDelete = () => {
+    if (!onDelete) return;
+    const label = initial?.name ?? "this category";
+    if (window.confirm(`Delete "${label}"? This cannot be undone.`)) {
+      onDelete();
+    }
+  };
+
   return (
     <div className="editor-overlay" onClick={onCancel}>
       <div className="editor" onClick={(e) => e.stopPropagation()}>
@@ -47,7 +55,7 @@ export function CategoryEditor({ mode, initial, onSave, onCancel, onDelete }: Pr
 
         <div className="editor-actions">
           {mode === "edit" && onDelete && (
-            <button className="btn-danger" onClick={onDelete}>
+            <button className="btn-danger" onClick={handleDelete}>
               Delete
             </button>
           )}

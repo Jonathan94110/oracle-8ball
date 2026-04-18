@@ -108,10 +108,14 @@ export function Oracle() {
             updateCategory(editingCategory.id, name, phrases);
             closeEditor();
           }}
-          onDelete={() => {
-            removeCategory(editingCategory.id);
-            closeEditor();
-          }}
+          onDelete={
+            categories.length > 1
+              ? () => {
+                  removeCategory(editingCategory.id);
+                  closeEditor();
+                }
+              : undefined
+          }
           onCancel={closeEditor}
         />
       )}

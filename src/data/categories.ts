@@ -1,10 +1,9 @@
 import type { Category } from "../types";
 
-export const BUILTIN_CATEGORIES: Category[] = [
+export const SEED_CATEGORIES: Category[] = [
   {
-    id: "builtin:classic",
+    id: "seed:classic",
     name: "Classic",
-    builtin: true,
     phrases: [
       "Autobots, roll out",
       "Till all are one",
@@ -19,9 +18,8 @@ export const BUILTIN_CATEGORIES: Category[] = [
     ]
   },
   {
-    id: "builtin:buy",
+    id: "seed:buy",
     name: "Should I buy this?",
-    builtin: true,
     phrases: [
       "Worth every credit",
       "Overpriced — wait for the sale",
@@ -36,9 +34,8 @@ export const BUILTIN_CATEGORIES: Category[] = [
     ]
   },
   {
-    id: "builtin:faction",
+    id: "seed:faction",
     name: "Autobot or Decepticon?",
-    builtin: true,
     phrases: [
       "Pure Autobot spark",
       "Decepticon through and through",
@@ -53,9 +50,8 @@ export const BUILTIN_CATEGORIES: Category[] = [
     ]
   },
   {
-    id: "builtin:battle",
+    id: "seed:battle",
     name: "Battle strategy",
-    builtin: true,
     phrases: [
       "Transform and attack",
       "Hold formation",
