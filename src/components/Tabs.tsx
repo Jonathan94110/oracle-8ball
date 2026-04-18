@@ -11,7 +11,6 @@ type Props = {
 export function Tabs({ categories, activeId, onSelect, onAdd, onEdit }: Props) {
   return (
     <div className="tab-bar">
-      <div className="tab-brand">ORACLE</div>
       <div className="tabs">
         {categories.map((cat) => {
           const active = cat.id === activeId;

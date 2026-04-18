@@ -98,6 +98,22 @@ export function useCategories() {
     });
   }, []);
 
+  const replaceAll = useCallback((next: Category[]) => {
+    if (next.length === 0) return;
+    setCategories(next);
+    setActiveIdState(next[0].id);
+  }, []);
+
+  const mergeIn = useCallback((incoming: Category[]) => {
+    setCategories((prev) => {
+      const existingIds = new Set(prev.map((c) => c.id));
+      const additions = incoming.map((c) =>
+        existingIds.has(c.id) ? { ...c, id: newId() } : c
+      );
+      return [...prev, ...additions];
+    });
+  }, []);
+
   return {
     categories,
     active,
@@ -105,6 +121,8 @@ export function useCategories() {
     setActiveId,
     addCategory,
     updateCategory,
-    removeCategory
+    removeCategory,
+    replaceAll,
+    mergeIn
   };
 }

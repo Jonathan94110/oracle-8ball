@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 function Torch({ position }: { position: [number, number, number] }) {
@@ -31,6 +31,75 @@ function Torch({ position }: { position: [number, number, number] }) {
       />
     </group>
   );
+}
+
+function useOptionalTexture(url: string): THREE.Texture | null {
+  const [tex, setTex] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      (t) => {
+        if (cancelled) return;
+        t.colorSpace = THREE.SRGBColorSpace;
+        setTex(t);
+      },
+      undefined,
+      () => {
+        if (!cancelled) setTex(null);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+  return tex;
+}
+
+function PedestalSigil() {
+  const tex = useOptionalTexture("/tfm-logo.png");
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const mat = ref.current.material as THREE.MeshBasicMaterial;
+    const pulse = 0.7 + Math.sin(clock.getElapsedTime() * 1.4) * 0.25;
+    mat.opacity = pulse;
+  });
+
+  if (!tex) return null;
+
+  return (
+    <mesh ref={ref} position={[0, -1.69, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[2.5, 2.5]} />
+      <meshBasicMaterial
+        map={tex}
+        transparent
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+type CameraShakeProps = { active: boolean };
+
+export function CameraShake({ active }: CameraShakeProps) {
+  const { camera } = useThree();
+  const origin = useRef(new THREE.Vector3(0, 0.4, 5));
+
+  useFrame(() => {
+    if (active) {
+      camera.position.x = origin.current.x + (Math.random() - 0.5) * 0.12;
+      camera.position.y = origin.current.y + (Math.random() - 0.5) * 0.1;
+      camera.position.z = origin.current.z + (Math.random() - 0.5) * 0.06;
+    } else {
+      camera.position.lerp(origin.current, 0.18);
+    }
+  });
+
+  return null;
 }
 
 export function CaveScene() {
@@ -74,6 +143,8 @@ export function CaveScene() {
           roughness={0.6}
         />
       </mesh>
+
+      <PedestalSigil />
     </>
   );
 }

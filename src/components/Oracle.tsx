@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { CaveScene } from "./CaveScene";
+import { CaveScene, CameraShake } from "./CaveScene";
 import { Magic8Ball } from "./Magic8Ball";
 import { Tabs } from "./Tabs";
 import { CategoryEditor } from "./CategoryEditor";
+import { TopBar } from "./TopBar";
+import { QuestionInput } from "./QuestionInput";
+import { HistoryDrawer } from "./HistoryDrawer";
 import { useCategories } from "../hooks/useCategories";
+import { useHistory } from "../hooks/useHistory";
 import { pickPhrase } from "../data/categories";
+import {
+  isMuted,
+  playReveal,
+  playShake,
+  startAmbient,
+  toggleMuted
+} from "../sound";
 
 type EditorState =
   | { mode: "add" }
@@ -22,29 +33,58 @@ export function Oracle() {
     setActiveId,
     addCategory,
     updateCategory,
-    removeCategory
+    removeCategory,
+    replaceAll,
+    mergeIn
   } = useCategories();
 
+  const history = useHistory();
+
   const [phrase, setPhrase] = useState(IDLE_TEXT);
+  const [question, setQuestion] = useState("");
   const [shaking, setShaking] = useState(false);
   const [editor, setEditor] = useState<EditorState>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [muted, setMutedState] = useState(() => isMuted());
+  const gestureStartedRef = useRef(false);
 
   const activeRef = useRef(active);
   activeRef.current = active;
+  const phraseRef = useRef(phrase);
+  phraseRef.current = phrase;
+  const questionRef = useRef(question);
+  questionRef.current = question;
 
   useEffect(() => {
     setPhrase(IDLE_TEXT);
   }, [activeId]);
 
+  const ensureGesture = useCallback(() => {
+    if (gestureStartedRef.current) return;
+    gestureStartedRef.current = true;
+    startAmbient();
+  }, []);
+
   const handleClick = useCallback(() => {
     if (shaking) return;
+    ensureGesture();
     setShaking(true);
-  }, [shaking]);
+    playShake();
+  }, [shaking, ensureGesture]);
 
   const handleShakeComplete = useCallback(() => {
-    setPhrase((prev) => pickPhrase(activeRef.current.phrases, prev));
+    const cat = activeRef.current;
+    const newPhrase = pickPhrase(cat.phrases, phraseRef.current);
+    setPhrase(newPhrase);
+    playReveal();
+    history.record({
+      categoryId: cat.id,
+      categoryName: cat.name,
+      question: questionRef.current.trim(),
+      answer: newPhrase
+    });
     setShaking(false);
-  }, []);
+  }, [history]);
 
   const openAdd = useCallback(() => setEditor({ mode: "add" }), []);
   const openEdit = useCallback(
@@ -58,8 +98,24 @@ export function Oracle() {
       ? categories.find((c) => c.id === editor.id)
       : undefined;
 
+  const handleToggleMute = useCallback(() => {
+    ensureGesture();
+    const nowMuted = toggleMuted();
+    setMutedState(nowMuted);
+  }, [ensureGesture]);
+
   return (
     <div className="oracle-root">
+      <TopBar
+        categories={categories}
+        muted={muted}
+        historyCount={history.entries.length}
+        onToggleMute={handleToggleMute}
+        onOpenHistory={() => setDrawerOpen(true)}
+        onReplaceAll={replaceAll}
+        onMergeIn={mergeIn}
+      />
+
       <Tabs
         categories={categories}
         activeId={activeId}
@@ -68,12 +124,19 @@ export function Oracle() {
         onEdit={openEdit}
       />
 
+      <QuestionInput
+        value={question}
+        onChange={setQuestion}
+        disabled={shaking}
+      />
+
       <Canvas
         shadows
         camera={{ position: [0, 0.4, 5], fov: 50 }}
         dpr={[1, 2]}
       >
         <CaveScene />
+        <CameraShake active={shaking} />
         <Magic8Ball
           phrase={phrase}
           shaking={shaking}
@@ -88,6 +151,15 @@ export function Oracle() {
           {shaking ? "The spark stirs..." : "Click the sphere to consult"}
         </p>
       </div>
+
+      <HistoryDrawer
+        entries={history.entries}
+        open={drawerOpen}
+        activeCategoryId={activeId}
+        onClose={() => setDrawerOpen(false)}
+        onClear={history.clear}
+        onClearCategory={history.clearForCategory}
+      />
 
       {editor?.mode === "add" && (
         <CategoryEditor
